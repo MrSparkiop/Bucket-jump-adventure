@@ -6,22 +6,14 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class LoadSave {
 
-    public static final String PLAYER_ATLAS = "//this will be the img of player";
-    public static final String LEVEL_ATLAS = "//this will be the img of player";
-    public static BufferedImage GetSpriteAtlas(String fileName) {
-        BufferedImage img = null;
-        InputStream is = LoadSave.class.getResourseAsStream("/" + fileName);
+    public static final String PLAYER_ATLAS = "player_atlas.png"; // Adjust file path as needed
+
+    public static Texture getTexture(String fileName) {
         try {
-            img = ImageID.read(is);//ill fix this later
-        } catch (IDException e) {
-            e.prontStackTrace();
-        }finally{
-            try{
-                is.close();
-            }catch (IDExeption e){
-                e.printStackTrace();
-            }
+            return new Texture(Gdx.files.internal(fileName));
+        } catch (GdxRuntimeException e) {
+            e.printStackTrace();
+            return null; // Return null if texture loading fails
         }
-        return img;
     }
 }
