@@ -1,8 +1,10 @@
 package levels;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.hat_quest.LoadSave;
 
 public class LevelManager {
     private Game game;
