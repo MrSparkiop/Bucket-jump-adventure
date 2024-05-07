@@ -32,6 +32,9 @@ public class MainWork extends ApplicationAdapter {
     private Rectangle bucket; // Represents the bucket
     private Array<Rectangle> raindrops; // Stores raindrops
     private long lastDropTime; // Time of last raindrop spawn
+    private float gravity = 1000; // Gravity force
+    private float jumpVelocity = 250; // Variable for controlling jump height
+    private float jumpHeight = 600; // Jump height
 
     @Override
     public void create() {
@@ -62,7 +65,7 @@ public class MainWork extends ApplicationAdapter {
     // Create the bucket object
     private void createBucket() {
         bucket = new Rectangle();
-        bucket.x = 800 / 2 - 64 / 2;
+        bucket.x = (float) 800 / 2 - (float) 64 / 2;
         bucket.y = 20;
         bucket.width = 64;
         bucket.height = 64;
@@ -78,37 +81,72 @@ public class MainWork extends ApplicationAdapter {
     public void render() {
         // Update game state and render graphics
         handleInput();
+        update(Gdx.graphics.getDeltaTime());
         ScreenUtils.clear(0, 0, 0.2f, 1);
-        updateCamera();
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
         renderBucket();
         renderRaindrops();
+        batch.end();
     }
 
-    // Handle user input for moving the bucket
+    // Handle user input for moving the bucket and jumping
     private void handleInput() {
         if (Gdx.input.isKeyPressed(Keys.A))
             bucket.x -= 300 * Gdx.graphics.getDeltaTime();
         if (Gdx.input.isKeyPressed(Keys.D))
             bucket.x += 300 * Gdx.graphics.getDeltaTime();
+        if (Gdx.input.isKeyJustPressed(Keys.SPACE) && bucket.y == 0) {
+            jumpVelocity = jumpHeight;
+        }
+    }
+
+    // Update game objects
+    private void update(float delta) {
+        // Update bucket position based on jump velocity
+        bucket.y += jumpVelocity * delta;
+
+        // Apply gravity to jump velocity to simulate falling
+        jumpVelocity -= gravity * delta;
+
+        // Check if bucket reaches bottom of the screen
+        if (bucket.y < 0) {
+            bucket.y = 0;
+            jumpVelocity = 0; // Reset jump velocity
+        }
 
         // Ensure the bucket stays within the screen bounds
         if (bucket.x < 0)
             bucket.x = 0;
         if (bucket.x > 800 - 64)
             bucket.x = 800 - 64;
-    }
 
-    // Update camera projection matrix
-    private void updateCamera() {
-        camera.update();
-        batch.setProjectionMatrix(camera.combined);
+
+        //RAINDROPS
+        // Update raindrops
+        for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext();) {
+            Rectangle raindrop = iter.next();
+            raindrop.y -= 200 * delta; // Update raindrop position
+            if (raindrop.y + 64 < 0) {
+                iter.remove(); // Remove raindrop if it's below the screen
+            }
+
+            if (raindrop.overlaps(bucket)) {
+                dropSound.play(); // Play sound if bucket catches raindrop
+                iter.remove();
+            }
+        }
+
+        // Render raindrops and handle collisions
+        if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
+            spawnRaindrop();
+        }
     }
 
     // Render the bucket
     private void renderBucket() {
-        batch.begin();
         batch.draw(bucketImage, bucket.x, bucket.y);
-        batch.end();
     }
 
     // Spawn a new raindrop
@@ -122,30 +160,11 @@ public class MainWork extends ApplicationAdapter {
         lastDropTime = TimeUtils.nanoTime();
     }
 
-    // Render raindrops and handle collisions
+    // Render raindrops
     private void renderRaindrops() {
-        if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
-            spawnRaindrop();
-        }
-
-        for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext();) {
-            Rectangle raindrop = iter.next();
-            raindrop.y -= 200 * Gdx.graphics.getDeltaTime();
-            if (raindrop.y + 64 < 0) {
-                iter.remove();
-            }
-
-            if (raindrop.overlaps(bucket)) {
-                dropSound.play();
-                iter.remove();
-            }
-        }
-
-        batch.begin();
         for (Rectangle raindrop : raindrops) {
             batch.draw(dropImage, raindrop.x, raindrop.y);
         }
-        batch.end();
     }
 
     // Dispose of resources when the game is closed
