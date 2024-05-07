@@ -88,9 +88,9 @@ public class MainWork extends ApplicationAdapter {
     // Handle user input for moving the bucket
     private void handleInput() {
         if (Gdx.input.isKeyPressed(Keys.A))
-            bucket.x -= 350 * Gdx.graphics.getDeltaTime();
+            bucket.x -= 300 * Gdx.graphics.getDeltaTime();
         if (Gdx.input.isKeyPressed(Keys.D))
-            bucket.x += 350 * Gdx.graphics.getDeltaTime();
+            bucket.x += 300 * Gdx.graphics.getDeltaTime();
 
         // Ensure the bucket stays within the screen bounds
         if (bucket.x < 0)
