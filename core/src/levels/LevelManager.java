@@ -20,8 +20,8 @@ public class LevelManager {
     }
 
     public void draw(SpriteBatch batch){
-        batch.draw(levelSprite, 0, 0);
-    }
+        batch.draw(levelSprite, 0, 0, null);
+    }       //maybe remove "null"
 
     public void update(){
         // Update logic for the level
