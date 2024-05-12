@@ -225,8 +225,8 @@
                 }
                 if (enemyDrop.overlaps(bucket)) {
                     System.out.println("Game is over");
-                    restartGame(); // Рестартиране на играта
-                    return; // Спиране на допълнителната обработка
+                    restartGame(); // Game restart
+                    return;
                 }
             }
 
