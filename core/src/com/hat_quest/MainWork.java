@@ -40,6 +40,9 @@
         private boolean showDeathScreen = false;
         private BitmapFont font;
         private ScoreBoard scoreBoard;
+        private float gravity = 1000; // Gravity force
+        private float jumpVelocity = 250; // Variable for controlling jump height
+        private float jumpHeight = 600; // Jump height
 
 
 
@@ -94,6 +97,7 @@
         public void render() {
             // Update game state and render graphics
             handleInput();
+            update(Gdx.graphics.getDeltaTime());
             ScreenUtils.clear(0, 0, 0.2f, 1);
             updateCamera();
 
@@ -181,6 +185,24 @@
             }
             if (Gdx.input.isKeyPressed(Keys.R) && showDeathScreen) {
                 restartGame();
+            }
+
+            if (Gdx.input.isKeyJustPressed(Keys.SPACE) && bucket.y == 0) {
+                jumpVelocity = jumpHeight;
+            }
+        }
+
+        private void update(float delta) {
+            // Update bucket position based on jump velocity
+            bucket.y += jumpVelocity * delta;
+
+            // Apply gravity to jump velocity to simulate falling
+            jumpVelocity -= gravity * delta;
+
+            // Check if bucket reaches bottom of the screen
+            if (bucket.y < 0) {
+                bucket.y = 0;
+                jumpVelocity = 0; // Reset jump velocity
             }
         }
 
