@@ -39,6 +39,7 @@
         private long lastEnemyDropTime; // Time of last enemy drop spawn
         private boolean showDeathScreen = false;
         private BitmapFont font;
+        private ScoreBoard scoreBoard;
 
 
 
@@ -53,6 +54,7 @@
             enemyDrops = new Array<Rectangle>();
             lastEnemyDropTime = TimeUtils.nanoTime();
             font = new BitmapFont();
+            scoreBoard = new ScoreBoard();
         }
 
         // Load textures and sounds
@@ -107,6 +109,7 @@
                 batch.end();
 
                 updateDrops();
+
             }
 
             long timeNow = TimeUtils.nanoTime();
@@ -127,6 +130,11 @@
                 font.draw(batch, "Press 'R' to Restart", 320, 200);
                 batch.end();
             }
+
+            batch.begin();
+            scoreBoard.draw(batch);
+            // Main logic to draw
+            batch.end();
         }
 
         private void updateDrops() {
@@ -134,10 +142,11 @@
             while (iter.hasNext()) {
                 Rectangle raindrop = iter.next();
                 raindrop.y -= 200 * Gdx.graphics.getDeltaTime();
-                if (raindrop.y + 64 < 0 || raindrop.overlaps(bucket)) {
-                    if (raindrop.overlaps(bucket)) {
-                        dropSound.play();
-                    }
+                if (raindrop.y + 64 < 0) {
+                    iter.remove();
+                } else if (raindrop.overlaps(bucket)) {
+                    dropSound.play();
+                    scoreBoard.addScore(1);  // Adding points to the ScoreBoard when collecting a drop
                     iter.remove();
                 }
             }
@@ -154,6 +163,7 @@
                     break;
                 }
             }
+
         }
 
         // Handle user input for moving the bucket
@@ -245,6 +255,7 @@
             dropSound.dispose();
             rainMusic.dispose();
             batch.dispose();
+            scoreBoard.dispose();
         }
 
         private void spawnEnemyDrop() {
@@ -262,6 +273,9 @@
             createBucket();
             lastDropTime = TimeUtils.nanoTime();
             showDeathScreen = false;
+            scoreBoard.resetScore();
             rainMusic.play();
         }
+
+
     }
