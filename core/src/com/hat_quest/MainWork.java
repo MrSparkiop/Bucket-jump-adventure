@@ -269,7 +269,7 @@
             batch.end();
         }
 
-        // Dispose of resources when the game is closed
+        // Dispose of resources when the game is closed.
         @Override
         public void dispose() {
             dropImage.dispose();
