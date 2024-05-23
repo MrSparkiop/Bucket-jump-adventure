@@ -42,6 +42,8 @@ public class MainWork extends ApplicationAdapter {
     private float gravity = 1000; // Gravity force
     private float jumpVelocity = 250; // Variable for controlling jump height
     private float jumpHeight = 600; // Jump height
+    private int jumpCount = 0; // Counter for jumps
+
 
     @Override
     public void create() {
@@ -118,8 +120,9 @@ public class MainWork extends ApplicationAdapter {
                 bucket.x -= 300 * Gdx.graphics.getDeltaTime();
             if (Gdx.input.isKeyPressed(Keys.D))
                 bucket.x += 300 * Gdx.graphics.getDeltaTime();
-            if (Gdx.input.isKeyJustPressed(Keys.SPACE) && bucket.y == 0) {
+            if (Gdx.input.isKeyJustPressed(Keys.SPACE) && jumpCount < 2) {
                 jumpVelocity = jumpHeight;
+                jumpCount++;
             }
         } else if (Gdx.input.isKeyPressed(Keys.R)) {
             restartGame();
@@ -138,6 +141,7 @@ public class MainWork extends ApplicationAdapter {
         if (bucket.y < 0) {
             bucket.y = 0;
             jumpVelocity = 0; // Reset jump velocity
+            jumpCount = 0; // Reset jump count when bucket is on the ground
         }
 
         // Ensure the bucket stays within the screen bounds
