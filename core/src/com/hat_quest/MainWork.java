@@ -11,6 +11,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Rectangle;
+import com.hat_quest.BonusSystem;
+
 
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -43,6 +45,7 @@ public class MainWork extends ApplicationAdapter {
     private float jumpVelocity = 250; // Variable for controlling jump height
     private float jumpHeight = 600; // Jump height
     private int lives;
+    private BonusSystem bonusSystem;
 
     @Override
     public void create() {
@@ -55,8 +58,10 @@ public class MainWork extends ApplicationAdapter {
         lastEnemyDropTime = TimeUtils.nanoTime();
         font = new BitmapFont();
         scoreBoard = new ScoreBoard();
+        bonusSystem = new BonusSystem("bonus.png");
         lives = 3;
     }
+
 
     // Load textures and sounds
     private void loadResources() {
@@ -105,6 +110,7 @@ public class MainWork extends ApplicationAdapter {
             renderBucket();
             renderRaindrops();
             renderEnemyDrops();
+            bonusSystem.renderBonusDrops(batch);
         } else {
             font.draw(batch, "Game Over!", 350, 240);
             font.draw(batch, "Press 'R' to Restart", 320, 200);
@@ -155,6 +161,7 @@ public class MainWork extends ApplicationAdapter {
 
         updateRaindrops(delta);
         updateEnemyDrops(delta);
+        bonusSystem.updateBonusDrops(delta, bucket, this);
 
         long timeNow = TimeUtils.nanoTime();
         if (timeNow - lastDropTime > 1000000000) { // 1 second for normal drops
@@ -166,6 +173,9 @@ public class MainWork extends ApplicationAdapter {
                 spawnEnemyDrop();
             }
             lastEnemyDropTime = timeNow;
+        }
+        if (MathUtils.randomBoolean(0.001f)) { // chance to spawn a bonus drop
+            bonusSystem.spawnBonusDrop();
         }
     }
 
@@ -271,5 +281,12 @@ public class MainWork extends ApplicationAdapter {
         rainMusic.dispose();
         batch.dispose();
         scoreBoard.dispose();
+        bonusSystem.dispose();
+    }
+
+    public void addLife() {
+        if (lives < 3) {
+            lives++;
+        }
     }
 }
