@@ -11,6 +11,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Rectangle;
+import com.hat_quest.BonusSystem;
+
 
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -44,6 +46,8 @@ public class MainWork extends ApplicationAdapter {
     private float jumpHeight = 600; // Jump height
     private int jumpCount = 0; // Counter for jumps
 
+    private int lives;
+    private BonusSystem bonusSystem;
 
     @Override
     public void create() {
@@ -56,7 +60,10 @@ public class MainWork extends ApplicationAdapter {
         lastEnemyDropTime = TimeUtils.nanoTime();
         font = new BitmapFont();
         scoreBoard = new ScoreBoard();
+        bonusSystem = new BonusSystem("bonus.png");
+        lives = 3;
     }
+
 
     // Load textures and sounds
     private void loadResources() {
@@ -105,10 +112,13 @@ public class MainWork extends ApplicationAdapter {
             renderBucket();
             renderRaindrops();
             renderEnemyDrops();
+            bonusSystem.renderBonusDrops(batch);
         } else {
             font.draw(batch, "Game Over!", 350, 240);
             font.draw(batch, "Press 'R' to Restart", 320, 200);
         }
+        int screenWidth = Gdx.graphics.getWidth();
+        font.draw(batch, "Lives: " + lives, screenWidth - 100, 460);
         scoreBoard.draw(batch); // Draw the score board
         batch.end();
     }
@@ -131,6 +141,9 @@ public class MainWork extends ApplicationAdapter {
 
     // Update game objects
     private void update(float delta) {
+        if (showDeathScreen) {
+            return;
+        }
         // Update bucket position based on jump velocity
         bucket.y += jumpVelocity * delta;
 
@@ -152,6 +165,7 @@ public class MainWork extends ApplicationAdapter {
 
         updateRaindrops(delta);
         updateEnemyDrops(delta);
+        bonusSystem.updateBonusDrops(delta, bucket, this);
 
         long timeNow = TimeUtils.nanoTime();
         if (timeNow - lastDropTime > 1000000000) { // 1 second for normal drops
@@ -164,10 +178,16 @@ public class MainWork extends ApplicationAdapter {
             }
             lastEnemyDropTime = timeNow;
         }
+        if (MathUtils.randomBoolean(0.001f)) { // chance to spawn a bonus drop
+            bonusSystem.spawnBonusDrop();
+        }
     }
 
     // Update raindrops and handle collisions
     private void updateRaindrops(float delta) {
+        if (showDeathScreen) {
+            return;
+        }
         for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext();) {
             Rectangle raindrop = iter.next();
             raindrop.y -= 200 * delta; // Update raindrop position
@@ -183,14 +203,20 @@ public class MainWork extends ApplicationAdapter {
 
     // Update enemy drops and handle collisions
     private void updateEnemyDrops(float delta) {
+        if (showDeathScreen) {
+            return;
+        }
         for (Iterator<Rectangle> iter = enemyDrops.iterator(); iter.hasNext();) {
             Rectangle enemyDrop = iter.next();
             enemyDrop.y -= 200 * delta; // Update enemy drop position
             if (enemyDrop.y + 64 < 0) {
                 iter.remove(); // Remove enemy drop if it's below the screen
             } else if (enemyDrop.overlaps(bucket)) {
-                showDeathScreen = true; // Show death screen if bucket catches enemy drop
-                rainMusic.stop(); // Stop background music
+                lives--;
+                if (lives <= 0) {
+                    showDeathScreen = true; // Show death screen if player has no lives left
+                    rainMusic.stop(); // Stop background music
+                }
                 iter.remove();
             }
         }
@@ -246,6 +272,7 @@ public class MainWork extends ApplicationAdapter {
         lastEnemyDropTime = TimeUtils.nanoTime();
         showDeathScreen = false;
         scoreBoard.resetScore();
+        lives = 3;
         rainMusic.play();
     }
 
@@ -258,5 +285,12 @@ public class MainWork extends ApplicationAdapter {
         rainMusic.dispose();
         batch.dispose();
         scoreBoard.dispose();
+        bonusSystem.dispose();
+    }
+
+    public void addLife() {
+        if (lives < 3) {
+            lives++;
+        }
     }
 }
