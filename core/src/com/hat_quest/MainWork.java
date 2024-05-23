@@ -12,9 +12,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Rectangle;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
 import java.util.Iterator;
 
@@ -24,7 +24,6 @@ public class MainWork extends ApplicationAdapter {
     private Texture bucketImage; // Texture for the bucket
     private Sound dropSound; // Sound played when a raindrop is caught
     private Music rainMusic; // Background music
-    private Texture enemyDropImage; // Texture for enemy drops
 
     // Camera and Rendering
     private OrthographicCamera camera; // Camera for the game
@@ -33,17 +32,7 @@ public class MainWork extends ApplicationAdapter {
     // Game Objects
     private Rectangle bucket; // Represents the bucket
     private Array<Rectangle> raindrops; // Stores raindrops
-    private Array<Rectangle> enemyDrops; // Stores enemy drops
     private long lastDropTime; // Time of last raindrop spawn
-    private long lastEnemyDropTime; // Time of last enemy drop spawn
-    private boolean showDeathScreen = false; // Show death screen
-    private BitmapFont font; // Font for displaying text
-    private ScoreBoard scoreBoard; // Score board for tracking points
-    private float gravity = 1000; // Gravity force
-    private float jumpVelocity = 250; // Variable for controlling jump height
-    private float jumpHeight = 600; // Jump height
-    private int jumpCount = 0; // Counter for jumps
-
 
     @Override
     public void create() {
@@ -52,10 +41,6 @@ public class MainWork extends ApplicationAdapter {
         setupCamera();
         createBucket();
         initializeRaindrops();
-        enemyDrops = new Array<Rectangle>();
-        lastEnemyDropTime = TimeUtils.nanoTime();
-        font = new BitmapFont();
-        scoreBoard = new ScoreBoard();
     }
 
     // Load textures and sounds
@@ -64,7 +49,6 @@ public class MainWork extends ApplicationAdapter {
         bucketImage = new Texture(Gdx.files.internal("bucket.png"));
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
         rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
-        enemyDropImage = new Texture(Gdx.files.internal("enemy_droplet.png"));
         rainMusic.setLooping(true);
         rainMusic.play();
     }
@@ -79,7 +63,7 @@ public class MainWork extends ApplicationAdapter {
     // Create the bucket object
     private void createBucket() {
         bucket = new Rectangle();
-        bucket.x = (float) 800 / 2 - (float) 64 / 2;
+        bucket.x = 800 / 2 - 64 / 2;
         bucket.y = 20;
         bucket.width = 64;
         bucket.height = 64;
@@ -95,124 +79,37 @@ public class MainWork extends ApplicationAdapter {
     public void render() {
         // Update game state and render graphics
         handleInput();
-        update(Gdx.graphics.getDeltaTime());
         ScreenUtils.clear(0, 0, 0.2f, 1);
-        camera.update();
-        batch.setProjectionMatrix(camera.combined);
-
-        batch.begin();
-        if (!showDeathScreen) {
-            renderBucket();
-            renderRaindrops();
-            renderEnemyDrops();
-        } else {
-            font.draw(batch, "Game Over!", 350, 240);
-            font.draw(batch, "Press 'R' to Restart", 320, 200);
-        }
-        scoreBoard.draw(batch); // Draw the score board
-        batch.end();
+        updateCamera();
+        renderBucket();
+        renderRaindrops();
     }
 
-    // Handle user input for moving the bucket and jumping
+    // Handle user input for moving the bucket
     private void handleInput() {
-        if (!showDeathScreen) {
-            if (Gdx.input.isKeyPressed(Keys.A))
-                bucket.x -= 300 * Gdx.graphics.getDeltaTime();
-            if (Gdx.input.isKeyPressed(Keys.D))
-                bucket.x += 300 * Gdx.graphics.getDeltaTime();
-            if (Gdx.input.isKeyJustPressed(Keys.SPACE) && jumpCount < 2) {
-                jumpVelocity = jumpHeight;
-                jumpCount++;
-            }
-        } else if (Gdx.input.isKeyPressed(Keys.R)) {
-            restartGame();
-        }
-    }
-
-    // Update game objects
-    private void update(float delta) {
-        // Update bucket position based on jump velocity
-        bucket.y += jumpVelocity * delta;
-
-        // Apply gravity to jump velocity to simulate falling
-        jumpVelocity -= gravity * delta;
-
-        // Check if bucket reaches bottom of the screen
-        if (bucket.y < 0) {
-            bucket.y = 0;
-            jumpVelocity = 0; // Reset jump velocity
-            jumpCount = 0; // Reset jump count when bucket is on the ground
-        }
+        if (Gdx.input.isKeyPressed(Keys.A))
+            bucket.x -= 350 * Gdx.graphics.getDeltaTime();
+        if (Gdx.input.isKeyPressed(Keys.D))
+            bucket.x += 350 * Gdx.graphics.getDeltaTime();
 
         // Ensure the bucket stays within the screen bounds
         if (bucket.x < 0)
             bucket.x = 0;
         if (bucket.x > 800 - 64)
             bucket.x = 800 - 64;
-
-        updateRaindrops(delta);
-        updateEnemyDrops(delta);
-
-        long timeNow = TimeUtils.nanoTime();
-        if (timeNow - lastDropTime > 1000000000) { // 1 second for normal drops
-            spawnRaindrop();
-            lastDropTime = timeNow;
-        }
-        if (timeNow - lastEnemyDropTime > 1500000000) { // 1.5 seconds for enemy drops
-            if (MathUtils.randomBoolean(0.5f)) { // 50% chance to spawn an enemy drop
-                spawnEnemyDrop();
-            }
-            lastEnemyDropTime = timeNow;
-        }
     }
 
-    // Update raindrops and handle collisions
-    private void updateRaindrops(float delta) {
-        for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext();) {
-            Rectangle raindrop = iter.next();
-            raindrop.y -= 200 * delta; // Update raindrop position
-            if (raindrop.y + 64 < 0) {
-                iter.remove(); // Remove raindrop if it's below the screen
-            } else if (raindrop.overlaps(bucket)) {
-                dropSound.play(); // Play sound if bucket catches raindrop
-                scoreBoard.addScore(1); // Add score when a raindrop is caught
-                iter.remove();
-            }
-        }
-    }
-
-    // Update enemy drops and handle collisions
-    private void updateEnemyDrops(float delta) {
-        for (Iterator<Rectangle> iter = enemyDrops.iterator(); iter.hasNext();) {
-            Rectangle enemyDrop = iter.next();
-            enemyDrop.y -= 200 * delta; // Update enemy drop position
-            if (enemyDrop.y + 64 < 0) {
-                iter.remove(); // Remove enemy drop if it's below the screen
-            } else if (enemyDrop.overlaps(bucket)) {
-                showDeathScreen = true; // Show death screen if bucket catches enemy drop
-                rainMusic.stop(); // Stop background music
-                iter.remove();
-            }
-        }
+    // Update camera projection matrix
+    private void updateCamera() {
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
     }
 
     // Render the bucket
     private void renderBucket() {
+        batch.begin();
         batch.draw(bucketImage, bucket.x, bucket.y);
-    }
-
-    // Render raindrops
-    private void renderRaindrops() {
-        for (Rectangle raindrop : raindrops) {
-            batch.draw(dropImage, raindrop.x, raindrop.y);
-        }
-    }
-
-    // Render enemy drops
-    private void renderEnemyDrops() {
-        for (Rectangle enemyDrop : enemyDrops) {
-            batch.draw(enemyDropImage, enemyDrop.x, enemyDrop.y);
-        }
+        batch.end();
     }
 
     // Spawn a new raindrop
@@ -226,27 +123,30 @@ public class MainWork extends ApplicationAdapter {
         lastDropTime = TimeUtils.nanoTime();
     }
 
-    // Spawn a new enemy drop
-    private void spawnEnemyDrop() {
-        Rectangle enemyDrop = new Rectangle();
-        enemyDrop.x = MathUtils.random(0, 800 - 64);
-        enemyDrop.y = 480;
-        enemyDrop.width = 64;
-        enemyDrop.height = 64;
-        enemyDrops.add(enemyDrop);
-        lastEnemyDropTime = TimeUtils.nanoTime();
-    }
+    // Render raindrops and handle collisions
+    private void renderRaindrops() {
+        if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
+            spawnRaindrop();
+        }
 
-    // Restart the game
-    private void restartGame() {
-        raindrops.clear();
-        enemyDrops.clear();
-        createBucket();
-        lastDropTime = TimeUtils.nanoTime();
-        lastEnemyDropTime = TimeUtils.nanoTime();
-        showDeathScreen = false;
-        scoreBoard.resetScore();
-        rainMusic.play();
+        for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext();) {
+            Rectangle raindrop = iter.next();
+            raindrop.y -= 200 * Gdx.graphics.getDeltaTime();
+            if (raindrop.y + 64 < 0) {
+                iter.remove();
+            }
+
+            if (raindrop.overlaps(bucket)) {
+                dropSound.play();
+                iter.remove();
+            }
+        }
+
+        batch.begin();
+        for (Rectangle raindrop : raindrops) {
+            batch.draw(dropImage, raindrop.x, raindrop.y);
+        }
+        batch.end();
     }
 
     // Dispose of resources when the game is closed
@@ -257,6 +157,5 @@ public class MainWork extends ApplicationAdapter {
         dropSound.dispose();
         rainMusic.dispose();
         batch.dispose();
-        scoreBoard.dispose();
     }
 }
