@@ -132,6 +132,9 @@ public class MainWork extends ApplicationAdapter {
 
     // Update game objects
     private void update(float delta) {
+        if (showDeathScreen) {
+            return;
+        }
         // Update bucket position based on jump velocity
         bucket.y += jumpVelocity * delta;
 
@@ -168,6 +171,9 @@ public class MainWork extends ApplicationAdapter {
 
     // Update raindrops and handle collisions
     private void updateRaindrops(float delta) {
+        if (showDeathScreen) {
+            return;
+        }
         for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext();) {
             Rectangle raindrop = iter.next();
             raindrop.y -= 200 * delta; // Update raindrop position
@@ -183,6 +189,9 @@ public class MainWork extends ApplicationAdapter {
 
     // Update enemy drops and handle collisions
     private void updateEnemyDrops(float delta) {
+        if (showDeathScreen) {
+            return;
+        }
         for (Iterator<Rectangle> iter = enemyDrops.iterator(); iter.hasNext();) {
             Rectangle enemyDrop = iter.next();
             enemyDrop.y -= 200 * delta; // Update enemy drop position
