@@ -42,6 +42,7 @@ public class MainWork extends ApplicationAdapter {
     private float gravity = 1000; // Gravity force
     private float jumpVelocity = 250; // Variable for controlling jump height
     private float jumpHeight = 600; // Jump height
+    private int lives;
 
     @Override
     public void create() {
@@ -54,6 +55,7 @@ public class MainWork extends ApplicationAdapter {
         lastEnemyDropTime = TimeUtils.nanoTime();
         font = new BitmapFont();
         scoreBoard = new ScoreBoard();
+        lives = 3;
     }
 
     // Load textures and sounds
@@ -107,6 +109,8 @@ public class MainWork extends ApplicationAdapter {
             font.draw(batch, "Game Over!", 350, 240);
             font.draw(batch, "Press 'R' to Restart", 320, 200);
         }
+        int screenWidth = Gdx.graphics.getWidth();
+        font.draw(batch, "Lives: " + lives, screenWidth - 100, 460);
         scoreBoard.draw(batch); // Draw the score board
         batch.end();
     }
@@ -185,8 +189,11 @@ public class MainWork extends ApplicationAdapter {
             if (enemyDrop.y + 64 < 0) {
                 iter.remove(); // Remove enemy drop if it's below the screen
             } else if (enemyDrop.overlaps(bucket)) {
-                showDeathScreen = true; // Show death screen if bucket catches enemy drop
-                rainMusic.stop(); // Stop background music
+                lives--;
+                if (lives <= 0) {
+                    showDeathScreen = true; // Show death screen if player has no lives left
+                    rainMusic.stop(); // Stop background music
+                }
                 iter.remove();
             }
         }
@@ -242,6 +249,7 @@ public class MainWork extends ApplicationAdapter {
         lastEnemyDropTime = TimeUtils.nanoTime();
         showDeathScreen = false;
         scoreBoard.resetScore();
+        lives = 3;
         rainMusic.play();
     }
 
