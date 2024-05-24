@@ -45,7 +45,6 @@ public class MainWork extends ApplicationAdapter {
     private float jumpVelocity = 250; // Variable for controlling jump height
     private float jumpHeight = 600; // Jump height
     private int jumpCount = 0; // Counter for jumps
-
     private int lives;
     private BonusSystem bonusSystem;
 
