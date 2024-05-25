@@ -1,7 +1,8 @@
 package com.hat_quest;
 
-import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
@@ -13,19 +14,19 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Rectangle;
 import com.hat_quest.BonusSystem;
 
-
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
 import java.util.Iterator;
 
-public class MainWork extends ApplicationAdapter {
+public class MainWork implements Screen {
+
     // Textures and Sounds
     private Texture dropImage; // Texture for raindrops
     private Texture bucketImage; // Texture for the bucket
     private Sound dropSound; // Sound played when a raindrop is caught
-    private Music rainMusic; // Background music
+    private static Music rainMusic; // Background music
     private Texture enemyDropImage; // Texture for enemy drops
 
     // Camera and Rendering
@@ -39,6 +40,7 @@ public class MainWork extends ApplicationAdapter {
     private long lastDropTime; // Time of last raindrop spawn
     private long lastEnemyDropTime; // Time of last enemy drop spawn
     private boolean showDeathScreen = false; // Show death screen
+    private boolean isPaused = false; // Is the game paused
     private BitmapFont font; // Font for displaying text
     private ScoreBoard scoreBoard; // Score board for tracking points
     private float gravity = 1000; // Gravity force
@@ -48,8 +50,15 @@ public class MainWork extends ApplicationAdapter {
     private int lives;
     private BonusSystem bonusSystem;
 
+    private Game game;
+
+    public MainWork(Game game) {
+        this.game = game;
+    }
+
+    //renamed create to show dont get them confused
     @Override
-    public void create() {
+    public void show() {
         // Load resources and initialize game objects
         loadResources();
         setupCamera();
@@ -63,6 +72,76 @@ public class MainWork extends ApplicationAdapter {
         lives = 3;
     }
 
+    @Override
+    public void render(float delta) {
+        if (isPaused) {
+            ScreenUtils.clear(0, 0, 0.2f, 1);
+            camera.update();
+            batch.setProjectionMatrix(camera.combined);
+
+            batch.begin();
+            font.draw(batch, "Paused", 350, 240);
+            font.draw(batch, "Press 'P' to Resume", 320, 200);
+            batch.end();
+
+            if (Gdx.input.isKeyJustPressed(Keys.P)) {
+                isPaused = false;
+                rainMusic.play(); // Resume music when unpausing
+            }
+            return;
+        }
+
+        // Update game state and render graphics
+        handleInput();
+        update(delta);
+        ScreenUtils.clear(0, 0, 0.2f, 1);
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+
+        batch.begin();
+        if (!showDeathScreen) {
+            renderBucket();
+            renderRaindrops();
+            renderEnemyDrops();
+            bonusSystem.renderBonusDrops(batch);
+        } else {
+            font.draw(batch, "Game Over!", 350, 240);
+            font.draw(batch, "Press 'R' to Restart", 320, 200);
+            font.draw(batch, "Esc for Main Menu", 320, 160);
+            if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
+                game.setScreen(new StartMenuScreen((MainGame) game));
+                rainMusic.stop(); // Stop music when going to main menu
+                return;
+            }
+        }
+        int screenWidth = Gdx.graphics.getWidth();
+        font.draw(batch, "Lives: " + lives, screenWidth - 100, 460);
+        scoreBoard.draw(batch); // Draw the score board
+        batch.end();
+    }
+
+    @Override
+    public void resize(int width, int height) {}
+
+    @Override
+    public void pause() {}
+
+    @Override
+    public void resume() {}
+
+    @Override
+    public void hide() {}
+
+    @Override
+    public void dispose() {
+        dropImage.dispose();
+        bucketImage.dispose();
+        dropSound.dispose();
+        rainMusic.dispose();
+        if (batch != null) batch.dispose();
+        scoreBoard.dispose();
+        bonusSystem.dispose();
+    }
 
     // Load textures and sounds
     private void loadResources() {
@@ -85,7 +164,7 @@ public class MainWork extends ApplicationAdapter {
     // Create the bucket object
     private void createBucket() {
         bucket = new Rectangle();
-        bucket.x = (float) 800 / 2 - (float) 64 / 2;
+        bucket.x = (float)800 / 2 - (float)64 / 2;
         bucket.y = 20;
         bucket.width = 64;
         bucket.height = 64;
@@ -95,31 +174,6 @@ public class MainWork extends ApplicationAdapter {
     private void initializeRaindrops() {
         raindrops = new Array<Rectangle>();
         spawnRaindrop();
-    }
-
-    @Override
-    public void render() {
-        // Update game state and render graphics
-        handleInput();
-        update(Gdx.graphics.getDeltaTime());
-        ScreenUtils.clear(0, 0, 0.2f, 1);
-        camera.update();
-        batch.setProjectionMatrix(camera.combined);
-
-        batch.begin();
-        if (!showDeathScreen) {
-            renderBucket();
-            renderRaindrops();
-            renderEnemyDrops();
-            bonusSystem.renderBonusDrops(batch);
-        } else {
-            font.draw(batch, "Game Over!", 350, 240);
-            font.draw(batch, "Press 'R' to Restart", 320, 200);
-        }
-        int screenWidth = Gdx.graphics.getWidth();
-        font.draw(batch, "Lives: " + lives, screenWidth - 100, 460);
-        scoreBoard.draw(batch); // Draw the score board
-        batch.end();
     }
 
     // Handle user input for moving the bucket and jumping
@@ -133,8 +187,24 @@ public class MainWork extends ApplicationAdapter {
                 jumpVelocity = jumpHeight;
                 jumpCount++;
             }
-        } else if (Gdx.input.isKeyPressed(Keys.R)) {
-            restartGame();
+            if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
+                game.setScreen(new StartMenuScreen((MainGame) game));
+                rainMusic.stop(); // Stop music when going to main menu
+                return;
+            }
+            if (Gdx.input.isKeyJustPressed(Keys.P)) {
+                isPaused = true;
+                rainMusic.pause(); // Pause music
+            }
+        } else {
+            if (Gdx.input.isKeyPressed(Keys.R)) {
+                restartGame();
+            }
+            if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
+                game.setScreen(new StartMenuScreen((MainGame) game));
+                rainMusic.stop(); // Stop music when going to main menu
+                return;
+            }
         }
     }
 
@@ -275,21 +345,14 @@ public class MainWork extends ApplicationAdapter {
         rainMusic.play();
     }
 
-    // Dispose of resources when the game is closed
-    @Override
-    public void dispose() {
-        dropImage.dispose();
-        bucketImage.dispose();
-        dropSound.dispose();
-        rainMusic.dispose();
-        batch.dispose();
-        scoreBoard.dispose();
-        bonusSystem.dispose();
-    }
-
     public void addLife() {
         if (lives < 3) {
             lives++;
         }
+    }
+
+    // Method to update the volume
+    public static void updateVolume(float volume) {
+        rainMusic.setVolume(volume);
     }
 }
