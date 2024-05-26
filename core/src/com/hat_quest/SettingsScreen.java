@@ -64,9 +64,9 @@ public class SettingsScreen implements Screen {
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
                 Vector2 touch = new Vector2(screenX, Gdx.graphics.getHeight() - screenY);
                 if (volumeButtonBounds.contains(touch)) {
-                    selectedIndex = 0; 
+                    selectedIndex = 0; // Потребителят е натиснал бутона за звука
                 } else if (backButtonBounds.contains(touch)) {
-                    selectedIndex = 1;
+                    selectedIndex = 1; // Потребителят е натиснал бутона за връщане
                     selectButton();
                 }
                 return true;
