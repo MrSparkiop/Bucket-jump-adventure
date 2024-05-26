@@ -28,6 +28,7 @@ public class MainWork implements Screen {
     private Sound dropSound; // Sound played when a raindrop is caught
     private static Music rainMusic; // Background music
     private Texture enemyDropImage; // Texture for enemy drops
+    private Texture shieldImage;
 
     // Camera and Rendering
     private OrthographicCamera camera; // Camera for the game
@@ -49,6 +50,7 @@ public class MainWork implements Screen {
     private int jumpCount = 0; // Counter for jumps
     private int lives;
     private BonusSystem bonusSystem;
+    private Shield shield;
 
     private Game game;
 
@@ -69,6 +71,7 @@ public class MainWork implements Screen {
         font = new BitmapFont();
         scoreBoard = new ScoreBoard();
         bonusSystem = new BonusSystem("bonus.png");
+        shield = new Shield();
         lives = 3;
     }
 
@@ -104,6 +107,10 @@ public class MainWork implements Screen {
             renderRaindrops();
             renderEnemyDrops();
             bonusSystem.renderBonusDrops(batch);
+            if (shield.isActive()) {
+                renderShield();
+            }
+
         } else {
             font.draw(batch, "Game Over!", 350, 240);
             font.draw(batch, "Press 'R' to Restart", 320, 200);
@@ -150,6 +157,7 @@ public class MainWork implements Screen {
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
         rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
         enemyDropImage = new Texture(Gdx.files.internal("enemy_droplet.png"));
+        shieldImage = new Texture(Gdx.files.internal("shield.png")); // Load shield texture
         rainMusic.setLooping(true);
         rainMusic.play();
     }
@@ -159,6 +167,7 @@ public class MainWork implements Screen {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
         batch = new SpriteBatch();
+
     }
 
     // Create the bucket object
@@ -195,6 +204,9 @@ public class MainWork implements Screen {
             if (Gdx.input.isKeyJustPressed(Keys.P)) {
                 isPaused = true;
                 rainMusic.pause(); // Pause music
+            }
+            if (Gdx.input.isKeyJustPressed(Keys.F) && shield.canActivate()) {
+                shield.activate();
             }
         } else {
             if (Gdx.input.isKeyPressed(Keys.R)) {
@@ -234,6 +246,7 @@ public class MainWork implements Screen {
 
         updateRaindrops(delta);
         updateEnemyDrops(delta);
+        shield.update();
         bonusSystem.updateBonusDrops(delta, bucket, this);
 
         long timeNow = TimeUtils.nanoTime();
@@ -272,21 +285,22 @@ public class MainWork implements Screen {
 
     // Update enemy drops and handle collisions
     private void updateEnemyDrops(float delta) {
-        if (showDeathScreen) {
-            return;
-        }
         for (Iterator<Rectangle> iter = enemyDrops.iterator(); iter.hasNext();) {
             Rectangle enemyDrop = iter.next();
-            enemyDrop.y -= 200 * delta; // Update enemy drop position
+            enemyDrop.y -= 200 * delta;
             if (enemyDrop.y + 64 < 0) {
-                iter.remove(); // Remove enemy drop if it's below the screen
-            } else if (enemyDrop.overlaps(bucket)) {
-                lives--;
-                if (lives <= 0) {
-                    showDeathScreen = true; // Show death screen if player has no lives left
-                    rainMusic.stop(); // Stop background music
-                }
                 iter.remove();
+            } else if (enemyDrop.overlaps(bucket)) {
+                if (shield.isActive()) {
+                    iter.remove();
+                } else {
+                    lives--;
+                    if (lives <= 0) {
+                        showDeathScreen = true;
+                        rainMusic.stop();
+                    }
+                    iter.remove();
+                }
             }
         }
     }
@@ -309,6 +323,11 @@ public class MainWork implements Screen {
             batch.draw(enemyDropImage, enemyDrop.x, enemyDrop.y);
         }
     }
+
+    private void renderShield() {
+        batch.draw(shieldImage, bucket.x - 10, bucket.y - 10, bucket.width + 20, bucket.height + 20);
+    }
+
 
     // Spawn a new raindrop
     private void spawnRaindrop() {
