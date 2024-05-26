@@ -354,5 +354,6 @@ public class MainWork implements Screen {
     // Method to update the volume
     public static void updateVolume(float volume) {
         rainMusic.setVolume(volume);
+
     }
 }

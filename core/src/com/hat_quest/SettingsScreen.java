@@ -64,9 +64,9 @@ public class SettingsScreen implements Screen {
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
                 Vector2 touch = new Vector2(screenX, Gdx.graphics.getHeight() - screenY);
                 if (volumeButtonBounds.contains(touch)) {
-                    selectedIndex = 0;
+                    selectedIndex = 0; // Потребителят е натиснал бутона за звука
                 } else if (backButtonBounds.contains(touch)) {
-                    selectedIndex = 1;
+                    selectedIndex = 1; // Потребителят е натиснал бутона за връщане
                     selectButton();
                 }
                 return true;
@@ -94,7 +94,7 @@ public class SettingsScreen implements Screen {
 
         buttonFont.getData().setScale(1.5f);
         buttonFont.setColor(selectedIndex == 0 ? 1 : 0.7f, selectedIndex == 0 ? 1 : 0.7f, selectedIndex == 0 ? 1 : 0.7f, 1);
-        buttonFont.draw(batch, "Volume: " + (int) (volume * 100), volumeButtonBounds.x, volumeButtonBounds.y);
+        font.draw(batch, "Volume: " + (int) (volume * 100), 350, 250);
         buttonFont.setColor(selectedIndex == 1 ? 1 : 0.7f, selectedIndex == 1 ? 1 : 0.7f, selectedIndex == 1 ? 1 : 0.7f, 1);
         buttonFont.draw(batch, "Back", backButtonBounds.x, backButtonBounds.y);
 
