@@ -10,108 +10,164 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.Input.Keys;
 
+// Class representing the Settings screen
 public class SettingsScreen implements Screen {
-    private MainGame game;
-    private SpriteBatch batch;
-    private BitmapFont font;
-    private BitmapFont buttonFont;
-    private int selectedIndex;
+    private final MainGame game; // Reference to the main game class
+    private final SpriteBatch batch; // SpriteBatch used for drawing
+    private final BitmapFont font; // Font for the title
+    private final BitmapFont buttonFont; // Font for the buttons
+    private int selectedIndex; // Index of the selected menu item
     private float volume = 0.5f; // Default volume value
 
-    private Rectangle volumeButtonBounds;
-    private Rectangle backButtonBounds;
+    private final Rectangle volumeButtonBounds; // Bounds for the Volume button
+    private final Rectangle backButtonBounds; // Bounds for the Back button
 
+    // Constructor to initialize the Settings screen
     public SettingsScreen(final MainGame game) {
         this.game = game;
-        this.batch = game.batch;
-        font = new BitmapFont();
-        buttonFont = new BitmapFont();
-        selectedIndex = 0;
+        this.batch = game.getBatch();
+        this.font = new BitmapFont();
+        this.buttonFont = new BitmapFont();
+        this.selectedIndex = 0;
 
-        volumeButtonBounds = new Rectangle(350, 180, 200, 30);
-        backButtonBounds = new Rectangle(350, 130, 100, 30);
+        // Initialize button bounds
+        this.volumeButtonBounds = new Rectangle(350, 180, 200, 30);
+        this.backButtonBounds = new Rectangle(350, 130, 100, 30);
 
+        setupInputProcessor(); // Set up input handling
+    }
+
+    // Set up input handling for keyboard and touch input
+    private void setupInputProcessor() {
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
-                switch (keycode) {
-                    case Keys.UP:
-                        selectedIndex = (selectedIndex + 1) % 2;
-                        break;
-                    case Keys.DOWN:
-                        selectedIndex = (selectedIndex + 1) % 2;
-                        break;
-                    case Keys.LEFT:
-                        if (selectedIndex == 0) {
-                            volume = Math.max(0, volume - 0.1f);
-                            MainWork.updateVolume(volume); // Update volume in MainWork
-                        }
-                        break;
-                    case Keys.RIGHT:
-                        if (selectedIndex == 0) {
-                            volume = Math.min(1, volume + 0.1f);
-                            MainWork.updateVolume(volume); // Update volume in MainWork
-                        }
-                        break;
-                    case Keys.ENTER:
-                        selectButton();
-                        break;
-                }
+                handleKeyInput(keycode);
                 return true;
             }
 
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                Vector2 touch = new Vector2(screenX, Gdx.graphics.getHeight() - screenY);
-                if (volumeButtonBounds.contains(touch)) {
-                    selectedIndex = 0; // User pressed the volume button
-                } else if (backButtonBounds.contains(touch)) {
-                    selectedIndex = 1; // User has pressed the return button
-                    selectButton();
-                }
+                handleTouchInput(screenX, screenY);
                 return true;
             }
         });
     }
 
+    // Handle keyboard input
+    private void handleKeyInput(int keycode) {
+        switch (keycode) {
+            case Keys.UP:
+                selectedIndex = (selectedIndex + 1) % 2; // Navigate up
+                break;
+            case Keys.DOWN:
+                selectedIndex = (selectedIndex + 1) % 2; // Navigate down
+                break;
+            case Keys.LEFT:
+                if (selectedIndex == 0) {
+                    adjustVolume(-0.1f); // Decrease volume
+                }
+                break;
+            case Keys.RIGHT:
+                if (selectedIndex == 0) {
+                    adjustVolume(0.1f); // Increase volume
+                }
+                break;
+            case Keys.ENTER:
+                selectButton(); // Select the current button
+                break;
+            default:
+                break;
+        }
+    }
+
+    // Handle touch input
+    private void handleTouchInput(int screenX, int screenY) {
+        Vector2 touch = new Vector2(screenX, Gdx.graphics.getHeight() - screenY);
+        if (volumeButtonBounds.contains(touch)) {
+            selectedIndex = 0; // Volume button selected
+        } else if (backButtonBounds.contains(touch)) {
+            selectedIndex = 1; // Back button selected
+            selectButton(); // Select the current button
+        }
+    }
+
+    // Adjust the volume
+    private void adjustVolume(float adjustment) {
+        volume = Math.max(0, Math.min(1, volume + adjustment));
+        MainWork.updateVolume(volume); // Update volume in MainWork
+    }
+
+    // Perform action based on the selected button
     private void selectButton() {
         if (selectedIndex == 1) {
-            game.setScreen(new StartMenuScreen(game));
+            game.setScreen(new StartMenuScreen(game)); // Return to the start menu
         }
     }
 
     @Override
-    public void show() {}
-
-    @Override
-    public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        batch.begin();
-        font.getData().setScale(2);
-        font.draw(batch, "Settings", 350, 300);
-
-        buttonFont.getData().setScale(1.5f);
-        buttonFont.setColor(selectedIndex == 0 ? 1 : 0.7f, selectedIndex == 0 ? 1 : 0.7f, selectedIndex == 0 ? 1 : 0.7f, 1);
-        font.draw(batch, "Volume: " + (int) (volume * 100), 350, 250);
-        buttonFont.setColor(selectedIndex == 1 ? 1 : 0.7f, selectedIndex == 1 ? 1 : 0.7f, selectedIndex == 1 ? 1 : 0.7f, 1);
-        buttonFont.draw(batch, "Back", backButtonBounds.x, backButtonBounds.y);
-
-        batch.end();
+    public void show() {
+        // Any setup code for the screen can go here
     }
 
     @Override
-    public void resize(int width, int height) {}
+    public void render(float delta) {
+        clearScreen(); // Clear the screen
+        renderSettings(); // Render the settings menu
+    }
+
+    // Clear the screen with a dark blue color
+    private void clearScreen() {
+        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    }
+
+    // Render the settings menu
+    private void renderSettings() {
+        batch.begin();
+        drawTitle(); // Draw the title
+        drawButtons(); // Draw the buttons
+        batch.end();
+    }
+
+    // Draw the title text
+    private void drawTitle() {
+        font.getData().setScale(2);
+        font.draw(batch, "Settings", 350, 300);
+    }
+
+    // Draw the buttons
+    private void drawButtons() {
+        drawButton("Volume: " + (int) (volume * 100), volumeButtonBounds, 0);
+        drawButton("Back", backButtonBounds, 1);
+    }
+
+    // Draw a single button
+    private void drawButton(String text, Rectangle bounds, int index) {
+        buttonFont.getData().setScale(1.5f);
+        buttonFont.setColor(selectedIndex == index ? 1 : 0.7f, selectedIndex == index ? 1 : 0.7f, selectedIndex == index ? 1 : 0.7f, 1);
+        buttonFont.draw(batch, text, bounds.x, bounds.y);
+    }
 
     @Override
-    public void pause() {}
+    public void resize(int width, int height) {
+        // Handle screen resizing if necessary
+    }
 
     @Override
-    public void resume() {}
+    public void pause() {
+        // Handle screen pause if necessary
+    }
 
     @Override
-    public void hide() {}
+    public void resume() {
+        // Handle screen resume if necessary
+    }
+
+    @Override
+    public void hide() {
+        // Handle screen hide if necessary
+    }
 
     @Override
     public void dispose() {
