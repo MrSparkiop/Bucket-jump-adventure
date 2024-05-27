@@ -18,6 +18,7 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
+
 import java.util.Iterator;
 
 public class MainWork implements Screen {
@@ -51,6 +52,7 @@ public class MainWork implements Screen {
     private int lives;
     private BonusSystem bonusSystem;
     private Shield shield;
+
 
     private Game game;
 
@@ -124,6 +126,13 @@ public class MainWork implements Screen {
         int screenWidth = Gdx.graphics.getWidth();
         font.draw(batch, "Lives: " + lives, screenWidth - 100, 460);
         scoreBoard.draw(batch); // Draw the score board
+
+        if (!shield.canActivate()) {
+            long cooldownRemaining = shield.getCooldownRemaining();
+            font.draw(batch, "Shield Cooldown: " + cooldownRemaining + "s", screenWidth - 200, 440);
+        } else {
+            font.draw(batch, "Shield Ready!", screenWidth - 200, 440);
+        }
         batch.end();
     }
 
