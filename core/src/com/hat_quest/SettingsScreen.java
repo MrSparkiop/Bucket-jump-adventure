@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.Input.Keys;
 
 // Class representing the Settings screen
@@ -18,8 +17,10 @@ public class SettingsScreen implements Screen {
     private final BitmapFont buttonFont; // Font for the buttons
     private int selectedIndex; // Index of the selected menu item
     private float volume = 0.5f; // Default volume value
+    private boolean isFullscreen = false; // Default fullscreen value
 
     private final Rectangle volumeButtonBounds; // Bounds for the Volume button
+    private final Rectangle fullscreenButtonBounds; // Bounds for the Fullscreen button
     private final Rectangle backButtonBounds; // Bounds for the Back button
 
     // Constructor to initialize the Settings screen
@@ -32,23 +33,18 @@ public class SettingsScreen implements Screen {
 
         // Initialize button bounds
         this.volumeButtonBounds = new Rectangle(350, 180, 200, 30);
-        this.backButtonBounds = new Rectangle(350, 130, 100, 30);
+        this.fullscreenButtonBounds = new Rectangle(350, 130, 200, 30);
+        this.backButtonBounds = new Rectangle(350, 80, 100, 30);
 
         setupInputProcessor(); // Set up input handling
     }
 
-    // Set up input handling for keyboard and touch input
+    // Set up input handling for keyboard input
     private void setupInputProcessor() {
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
                 handleKeyInput(keycode);
-                return true;
-            }
-
-            @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                handleTouchInput(screenX, screenY);
                 return true;
             }
         });
@@ -58,10 +54,10 @@ public class SettingsScreen implements Screen {
     private void handleKeyInput(int keycode) {
         switch (keycode) {
             case Keys.UP:
-                selectedIndex = (selectedIndex + 1) % 2; // Navigate up
+                selectedIndex = (selectedIndex + 2) % 3; // Navigate up
                 break;
             case Keys.DOWN:
-                selectedIndex = (selectedIndex + 1) % 2; // Navigate down
+                selectedIndex = (selectedIndex + 1) % 3; // Navigate down
                 break;
             case Keys.LEFT:
                 if (selectedIndex == 0) {
@@ -81,17 +77,6 @@ public class SettingsScreen implements Screen {
         }
     }
 
-    // Handle touch input
-    private void handleTouchInput(int screenX, int screenY) {
-        Vector2 touch = new Vector2(screenX, Gdx.graphics.getHeight() - screenY);
-        if (volumeButtonBounds.contains(touch)) {
-            selectedIndex = 0; // Volume button selected
-        } else if (backButtonBounds.contains(touch)) {
-            selectedIndex = 1; // Back button selected
-            selectButton(); // Select the current button
-        }
-    }
-
     // Adjust the volume
     private void adjustVolume(float adjustment) {
         volume = Math.max(0, Math.min(1, volume + adjustment));
@@ -100,8 +85,20 @@ public class SettingsScreen implements Screen {
 
     // Perform action based on the selected button
     private void selectButton() {
-        if (selectedIndex == 1) {
-            game.setScreen(new StartMenuScreen(game)); // Return to the start menu
+        switch (selectedIndex) {
+            case 1:
+                isFullscreen = !isFullscreen;
+                if (isFullscreen) {
+                    Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+                } else {
+                    Gdx.graphics.setWindowedMode(800, 480);
+                }
+                break;
+            case 2:
+                game.setScreen(new StartMenuScreen(game)); // Return to the start menu
+                break;
+            default:
+                break;
         }
     }
 
@@ -139,7 +136,8 @@ public class SettingsScreen implements Screen {
     // Draw the buttons
     private void drawButtons() {
         drawButton("Volume: " + (int) (volume * 100), volumeButtonBounds, 0);
-        drawButton("Back", backButtonBounds, 1);
+        drawButton("Toggle Fullscreen", fullscreenButtonBounds, 1);
+        drawButton("Back", backButtonBounds, 2);
     }
 
     // Draw a single button
