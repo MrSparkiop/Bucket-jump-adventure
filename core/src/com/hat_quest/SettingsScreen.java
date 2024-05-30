@@ -86,20 +86,38 @@ public class SettingsScreen implements Screen {
     // Perform action based on the selected button
     private void selectButton() {
         switch (selectedIndex) {
+            case 0:
+                break; // Volume adjustment is handled with LEFT/RIGHT keys
             case 1:
-                isFullscreen = !isFullscreen;
-                if (isFullscreen) {
-                    Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-                } else {
-                    Gdx.graphics.setWindowedMode(800, 480);
-                }
+                toggleFullscreen();
                 break;
             case 2:
-                game.setScreen(new StartMenuScreen(game)); // Return to the start menu
+                navigateBack();
                 break;
             default:
                 break;
         }
+    }
+
+    // Toggle fullscreen mode
+    private void toggleFullscreen() {
+        isFullscreen = !isFullscreen;
+        try {
+            if (isFullscreen) {
+                Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+            } else {
+                Gdx.graphics.setWindowedMode(800, 480);
+            }
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error toggling fullscreen mode: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Navigate back to the start menu
+    private void navigateBack() {
+        game.setScreen(new StartMenuScreen(game));
     }
 
     @Override
@@ -109,8 +127,14 @@ public class SettingsScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        clearScreen(); // Clear the screen
-        renderSettings(); // Render the settings menu
+        try {
+            clearScreen(); // Clear the screen
+            renderSettings(); // Render the settings menu
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error during rendering: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // Clear the screen with a dark blue color
@@ -169,7 +193,13 @@ public class SettingsScreen implements Screen {
 
     @Override
     public void dispose() {
-        font.dispose();
-        buttonFont.dispose();
+        try {
+            font.dispose();
+            buttonFont.dispose();
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error during dispose: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

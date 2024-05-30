@@ -88,19 +88,25 @@ public class MainWork implements Screen {
 
     @Override
     public void render(float delta) {
-        if (isPaused) {
-            renderPausedScreen();
-            if (Gdx.input.isKeyJustPressed(Keys.P)) {
-                isPaused = false;
-                rainMusic.play();
+        try {
+            if (isPaused) {
+                renderPausedScreen();
+                if (Gdx.input.isKeyJustPressed(Keys.P)) {
+                    isPaused = false;
+                    rainMusic.play();
+                }
+                return;
             }
-            return;
-        }
 
-        handleInput();
-        updateGameObjects(delta);
-        checkAndSpawnDrops(); // Handle time-based drop spawning
-        renderGameObjects();
+            handleInput();
+            updateGameObjects(delta);
+            checkAndSpawnDrops(); // Handle time-based drop spawning
+            renderGameObjects();
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error during rendering: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // Render the paused screen
@@ -228,13 +234,19 @@ public class MainWork implements Screen {
 
     @Override
     public void dispose() {
-        dropImage.dispose();
-        bucketImage.dispose();
-        dropSound.dispose();
-        rainMusic.dispose();
-        batch.dispose();
-        scoreBoard.dispose();
-        bonusSystem.dispose();
+        try {
+            dropImage.dispose();
+            bucketImage.dispose();
+            dropSound.dispose();
+            rainMusic.dispose();
+            batch.dispose();
+            scoreBoard.dispose();
+            bonusSystem.dispose();
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error during dispose: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // Restart the game

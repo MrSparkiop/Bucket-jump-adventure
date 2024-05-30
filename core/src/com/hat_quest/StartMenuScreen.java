@@ -87,18 +87,24 @@ public class StartMenuScreen implements Screen {
 
     // Perform action based on the selected button
     private void selectButton() {
-        switch (selectedIndex) {
-            case 0:
-                game.setScreen(new MainWork(game)); // Start the main game
-                break;
-            case 1:
-                game.setScreen(new SettingsScreen(game)); // Open settings screen
-                break;
-            case 2:
-                Gdx.app.exit(); // Exit the game
-                break;
-            default:
-                break;
+        try {
+            switch (selectedIndex) {
+                case 0:
+                    game.setScreen(new MainWork(game)); // Start the main game
+                    break;
+                case 1:
+                    game.setScreen(new SettingsScreen(game)); // Open settings screen
+                    break;
+                case 2:
+                    Gdx.app.exit(); // Exit the game
+                    break;
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error selecting button: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -109,8 +115,14 @@ public class StartMenuScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        clearScreen(); // Clear the screen
-        renderMenu(); // Render the menu
+        try {
+            clearScreen(); // Clear the screen
+            renderMenu(); // Render the menu
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error during rendering: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // Clear the screen with a dark blue color
@@ -169,7 +181,13 @@ public class StartMenuScreen implements Screen {
 
     @Override
     public void dispose() {
-        titleFont.dispose();
-        buttonFont.dispose();
+        try {
+            titleFont.dispose();
+            buttonFont.dispose();
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error during dispose: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

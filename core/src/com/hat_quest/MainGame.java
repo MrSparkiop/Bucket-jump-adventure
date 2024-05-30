@@ -9,20 +9,38 @@ public class MainGame extends Game {
 
     @Override
     public void create() {
-        batch = new SpriteBatch(); // Initialize the SpriteBatch
-        setScreen(new StartMenuScreen(this)); // Set the initial screen to the Start Menu
+        try {
+            batch = new SpriteBatch(); // Initialize the SpriteBatch
+            setScreen(new StartMenuScreen(this)); // Set the initial screen to the Start Menu
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error during game creation: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void render() {
-        super.render(); // Delegate the rendering to the current screen
+        try {
+            super.render(); // Delegate the rendering to the current screen
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error during rendering: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void dispose() {
-        // Dispose of the SpriteBatch when the game is closed
-        if (batch != null) {
-            batch.dispose();
+        try {
+            // Dispose of the SpriteBatch when the game is closed
+            if (batch != null) {
+                batch.dispose();
+            }
+        } catch (Exception e) {
+            // Log the exception and handle it appropriately
+            System.err.println("Error during dispose: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
